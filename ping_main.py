@@ -28,33 +28,30 @@ class PingEngine:
         self.gui.master.title("NA SERVER LEAGUE OF LEGENDS PING")
         self.gui.master.after(500, self.update_ping)
         self.gui.master.after(500, self.calc_avg_ping)
+        self.gui.master.after(500, self.update_spikes)
         self.gui.master.mainloop()
 
     def update_ping(self):
-        # checks for new ping info every 50 ms
-        update_freq = 100
+        # checks for new ping info every 100 ms
+        update_interval = 100
 
         if len(self.runner.ping_data) > 0:
             ping_val = self.runner.ping_data[-1]
 
-            if ping_val is not None:
-                ping_text = "Ping: " + str(ping_val) + " ms"
+            ping_text = "Ping: " + str(ping_val) + " ms"
 
-                self.gui.ping_info["text"] = ping_text
+            self.gui.ping_info["text"] = ping_text
 
-                self.gui.master.after(update_freq, self.update_ping)
-            else:
-                self.print_list(self.runner.ping_data)
-                print("None!")
+        # calls itself over and over
+        self.gui.master.after(update_interval, self.update_ping)
 
     def calc_avg_ping(self):
-        update_freq = 100
+        update_interval = 100
 
         total = 0
         if len(self.runner.ping_data) > 0:
             for num in self.runner.ping_data:
-                if num is not None:
-                    total = total + num
+                total = total + num
 
             avg = total / len(self.runner.ping_data)
 
@@ -64,11 +61,17 @@ class PingEngine:
 
             self.gui.avg_ping["text"] = ping_text
 
-            self.gui.master.after(update_freq, self.calc_avg_ping)
+        # calls itself over and over
+        self.gui.master.after(update_interval, self.calc_avg_ping)
 
-    def print_list(self, test_lst):
-        for ele in test_lst:
-            print(ele)
+    def update_spikes(self):
+        update_interval = 500
+
+        spikes = str(self.runner.lag_spikes)
+
+        self.gui.lag_spikes["text"] = "Number of lag spikes: " + spikes
+
+        self.gui.master.after(update_interval, self.update_spikes)
 
 
 if __name__ == "__main__":

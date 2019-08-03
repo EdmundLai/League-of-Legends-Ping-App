@@ -6,6 +6,7 @@ class PingRunner:
 
     def __init__(self):
         self.ping_data = []
+        self.lag_spikes = 0
 
     def parse_line(self, ping_line):
         words = ping_line.split()
@@ -15,7 +16,6 @@ class PingRunner:
 
             if ping_substring in word:
                 ping_time = int(word[len(ping_substring):-2])
-                print(ping_time)
                 return ping_time
 
     # pings Riot's ip's to test for lag
@@ -29,7 +29,13 @@ class PingRunner:
             line = p.stdout.readline()
             if line:
                 decoded_line = line.decode("utf-8")
-                self.ping_data.append(self.parse_line(decoded_line))
+                print(decoded_line)
+                data_parsed = self.parse_line(decoded_line)
+                # occurs if ping request is timed out
+                if data_parsed is None:
+                    self.lag_spikes += 1
+                else:
+                    self.ping_data.append(data_parsed)
             else:
                 break
 

@@ -1,0 +1,4 @@
+# Pycharm ignores
+.idea/
+__pycache__/
+venv/

@@ -17,7 +17,7 @@ class PingEngine:
 
         self.gui.master.after(0, self.check_engine_start)
         self.gui.master.after(0, self.check_engine_stop)
-        self.gui.master.after(500, self.update_ping)
+        self.gui.master.after(100, self.update_ping)
         self.gui.master.after(0, self.calc_avg_ping)
         self.gui.master.after(0, self.update_spikes)
 
@@ -52,11 +52,9 @@ class PingEngine:
             if len(self.runner.ping_data) > 0:
                 ping_val = self.runner.ping_data[-1]
 
-                ping_text = "Ping: " + str(ping_val) + " ms"
+                ping_text = "Ping: " + str(int(ping_val)) + " ms"
 
                 self.gui.ping_info["text"] = ping_text
-
-            # calls itself over and over as long as the engine is running
 
         self.gui.master.after(update_interval, self.update_ping)
 
@@ -77,8 +75,7 @@ class PingEngine:
 
                 self.gui.avg_ping["text"] = ping_text
 
-            # calls itself over and over
-
+        # calls itself over and over
         self.gui.master.after(update_interval, self.calc_avg_ping)
 
     def update_spikes(self):

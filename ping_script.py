@@ -1,9 +1,10 @@
 import subprocess
 import time
 import threading
+import platform
 
 
-# class used to call ping in Command Prompt on Windows
+# class used to call ping on different OS platforms
 class PingRunner:
 
     def __init__(self):
@@ -11,6 +12,7 @@ class PingRunner:
         self.lag_spikes = 0
         self.process = None
         self.stop_thread = False
+        self.found_index = None
 
     def parse_line(self, ping_line):
         words = ping_line.split()
@@ -19,16 +21,32 @@ class PingRunner:
             ping_substring = "time="
 
             if ping_substring in word:
-                ping_time = int(word[len(ping_substring):-2])
+                if self.found_index is None:
+                    self.found_index = PingRunner.find_end_index(word)
+
+                ping_time = float(word[len(ping_substring):self.found_index])
                 return ping_time
+
+    # utility method for parse_line
+    @staticmethod
+    def find_end_index(word):
+        end_index = 0
+        for test_char in reversed(word):
+            if str.isdigit(test_char):
+                return end_index
+            end_index -= 1
 
     # pings Riot's ip's to test for lag
     def run_ping_test(self, server):
         self.init_runner()
 
-        self.process = subprocess.Popen(["ping", "-t", server], shell=False,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        if platform.system() == "Windows":
+            self.process = subprocess.Popen(["ping", "-t", server], shell=False,
+                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # Unix and Mac
+        else:
+            self.process = subprocess.Popen(["ping", server], shell=False,
+                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         self.process.stdout.readline()
         self.process.stdout.readline()
@@ -67,6 +85,7 @@ class PingRunner:
         self.stop_thread = False
 
 
+# Used for testing
 if __name__ == "__main__":
     na_server = "104.160.131.3"
 

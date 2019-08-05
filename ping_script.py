@@ -24,8 +24,6 @@ class PingRunner:
             if ping_substring in word:
                 if self.found_index is None:
                     self.found_index = PingRunner.find_end_index(word)
-
-                ping_time = None
                     
                 if self.found_index == 0:
                     ping_time = word[len(ping_substring):]

@@ -14,6 +14,7 @@ class PingRunner:
         self.stop_thread = False
         self.found_index = None
 
+    # used to get the time data from the line created by the terminal
     def parse_line(self, ping_line):
         words = ping_line.split()
         for word in words:
@@ -24,7 +25,14 @@ class PingRunner:
                 if self.found_index is None:
                     self.found_index = PingRunner.find_end_index(word)
 
-                ping_time = float(word[len(ping_substring):self.found_index])
+                ping_time = None
+                    
+                if self.found_index == 0:
+                    ping_time = word[len(ping_substring):]
+                else:
+                    ping_time = word[len(ping_substring):self.found_index]
+                    
+                ping_time = float(ping_time)
                 return ping_time
 
     # utility method for parse_line

@@ -13,6 +13,7 @@ class PingRunner:
         self.process = None
         self.stop_thread = False
         self.found_index = None
+        self.data_changed = False
 
     # used to get the time data from the line created by the terminal
     def parse_line(self, ping_line):
@@ -76,6 +77,9 @@ class PingRunner:
                     self.lag_spikes += 1
                 else:
                     self.ping_data.append(data_parsed)
+
+                # setting dirty bit to true
+                self.data_changed = True
             else:
                 break
 

@@ -1,7 +1,7 @@
 import threading
-# module dependencies in the same folder
 import ping_script
 import gui_tk
+import mysql_mod
 
 
 # handles calling ping as well as updating the GUI
@@ -9,16 +9,23 @@ class PingEngine:
     def __init__(self):
         self.runner = ping_script.PingRunner()
         self.gui = gui_tk.MainGui()
+        self.sql_module = mysql_mod.MySQLModule()
         self.engine_running = False
+        self.current_ping = None
+
+    def init_engine(self):
+        self.init_mysql()
+        self.init_gui()
+
+    def init_mysql(self):
+        self.sql_module.init_database()
 
     def init_gui(self):
         self.gui.master.title("LEAGUE OF LEGENDS PING")
 
         self.gui.master.after(0, self.check_engine_start)
         self.gui.master.after(0, self.check_engine_stop)
-        self.gui.master.after(100, self.update_ping)
-        self.gui.master.after(0, self.calc_avg_ping)
-        self.gui.master.after(0, self.update_spikes)
+        self.gui.master.after(100, self.check_update_data)
 
         self.gui.master.mainloop()
 
@@ -51,50 +58,31 @@ class PingEngine:
         self.engine_running = False
         self.runner.stop_thread = True
         self.gui.reset_info()
+        self.init_mysql()
 
     def update_ping(self):
-        update_interval = 100
-        if self.engine_running:
-            # checks for new ping info every 100 ms
+        ping_text = "Ping: " + str(int(self.current_ping)) + " ms"
 
-            if len(self.runner.ping_data) > 0:
-                ping_val = self.runner.ping_data[-1]
-
-                ping_text = "Ping: " + str(int(ping_val)) + " ms"
-
-                self.gui.ping_info["text"] = ping_text
-
-        self.gui.master.after(update_interval, self.update_ping)
+        self.gui.ping_info["text"] = ping_text
 
     def calc_avg_ping(self):
-        update_interval = 100
-        if self.engine_running:
+        total = 0
 
-            total = 0
-            if len(self.runner.ping_data) > 0:
-                for num in self.runner.ping_data:
-                    total = total + num
+        for num in self.runner.ping_data:
+            total = total + num
 
-                avg = total / len(self.runner.ping_data)
+        avg = total / len(self.runner.ping_data)
 
-                avg_string = "%.f" % avg
+        avg_string = "%.f" % avg
 
-                ping_text = "Average Ping: " + avg_string + " ms"
+        ping_text = "Average Ping: " + avg_string + " ms"
 
-                self.gui.avg_ping["text"] = ping_text
-
-        # calls itself over and over
-        self.gui.master.after(update_interval, self.calc_avg_ping)
+        self.gui.avg_ping["text"] = ping_text
 
     def update_spikes(self):
-        update_interval = 500
-        if self.engine_running:
+        spikes = str(self.runner.lag_spikes)
 
-            spikes = str(self.runner.lag_spikes)
-
-            self.gui.lag_spikes["text"] = "Number of lag spikes: " + spikes
-
-        self.gui.master.after(update_interval, self.update_spikes)
+        self.gui.lag_spikes["text"] = "Number of lag spikes: " + spikes
 
     def check_engine_start(self):
         update_interval = 100
@@ -119,3 +107,23 @@ class PingEngine:
                 self.stop_engine()
 
         self.gui.master.after(update_interval, self.check_engine_stop)
+
+    # update the gui
+    def check_update_data(self):
+        update_interval = 100
+
+        if self.engine_running:
+            if self.runner.data_changed:
+                self.runner.data_changed = False
+
+                # updating current ping if there is any data
+                if len(self.runner.ping_data) > 0:
+                    self.current_ping = self.runner.ping_data[-1]
+
+                    self.calc_avg_ping()
+                    self.update_ping()
+                    self.update_spikes()
+                    self.sql_module.insert_ping_val(self.current_ping)
+                    print(self.sql_module.get_ping_values())
+
+        self.gui.master.after(update_interval, self.check_update_data)

@@ -106,6 +106,7 @@ class PingRunner:
         self.lag_spikes = 0
         self.process = None
         self.stop_thread = False
+        self.start_time = None
 
 
 # Used for testing

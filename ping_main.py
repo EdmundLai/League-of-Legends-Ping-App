@@ -27,6 +27,8 @@ class PingEngine:
         self.gui.master.after(0, self.check_engine_stop)
         self.gui.master.after(100, self.check_update_data)
 
+        self.gui.start_animation()
+
         self.gui.master.mainloop()
 
     def start_engine(self):
@@ -111,7 +113,7 @@ class PingEngine:
 
         self.gui.master.after(update_interval, self.check_engine_stop)
 
-    # update the gui
+    # update the gui whenever new data arrives, checks every 100 ms
     def check_update_data(self):
         update_interval = 100
 
@@ -127,6 +129,19 @@ class PingEngine:
                     self.update_ping()
                     self.update_spikes()
                     self.sql_module.insert_ping_val(self.current_ping_tuple)
-                    print(self.sql_module.get_ping_values())
+
+                    sql_ping_values = self.sql_module.get_ping_values()
+                    time_ping_tup = PingEngine.convert_to_lists(sql_ping_values)
+                    self.gui.update_data(time_ping_tup)
 
         self.gui.master.after(update_interval, self.check_update_data)
+
+    @staticmethod
+    def convert_to_lists(sql_tuple):
+        time_list = []
+        ping_list = []
+        for current_tup in sql_tuple:
+            time_list.append(current_tup[0])
+            ping_list.append(current_tup[1])
+
+        return time_list, ping_list

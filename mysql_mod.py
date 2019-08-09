@@ -21,8 +21,8 @@ class MySQLModule:
         self.connection.close()
 
     # gets the results of a valid MySQL command
-    def fetch(self, cmd, args=()):
-        self.execute(cmd, args)
+    def fetch(self, cmd, commit=False, args=()):
+        self.execute(cmd, commit, args)
         fetch_result = self.cursor.fetchall()
         return fetch_result
 
@@ -49,9 +49,9 @@ class MySQLModule:
         self.__disconnect__()
 
     def insert_ping_val(self, ping):
-        cmd = "INSERT INTO ping_database.ping_data (current_ping) VALUES" \
-              "(%s)"
-        self.execute(cmd, True, (ping,))
+        cmd = "INSERT INTO ping_database.ping_data (time_value, ping_value) VALUES" \
+              "(%s, %s)"
+        self.execute(cmd, True, (ping[0], ping[1],))
 
     def get_ping_values(self):
         cmd = "SELECT * FROM ping_database.ping_data"
@@ -64,9 +64,8 @@ class MySQLModule:
         cmd = "DROP TABLE IF EXISTS ping_database.ping_data"
         self.execute(cmd)
 
-        cmd = "CREATE TABLE ping_database.ping_data (" \
-              "current_ping INT(5) NOT NULL" \
-              ")"
+        cmd = "CREATE TABLE ping_database.ping_data (time_value INT(5), ping_value INT(5))"
+
         self.execute(cmd)
 
 

@@ -2,6 +2,7 @@ import subprocess
 import time
 import threading
 import platform
+from timeit import default_timer
 
 
 # class used to call ping on different OS platforms
@@ -14,6 +15,7 @@ class PingRunner:
         self.stop_thread = False
         self.found_index = None
         self.data_changed = False
+        self.start_time = None
 
     # used to get the time data from the line created by the terminal
     def parse_line(self, ping_line):
@@ -72,16 +74,27 @@ class PingRunner:
 
                 data_parsed = self.parse_line(decoded_line)
 
-                # occurs if ping request is timed out
-                if data_parsed is None:
-                    self.lag_spikes += 1
-                else:
-                    self.ping_data.append(data_parsed)
+                self.handle_data(data_parsed)
 
                 # setting dirty bit to true
                 self.data_changed = True
             else:
                 break
+
+    def handle_data(self, data):
+        # occurs if ping request is timed out
+        if data is None:
+            self.lag_spikes += 1
+        else:
+            if self.start_time is None:
+                self.start_time = default_timer()
+                current_time = self.start_time
+            else:
+                current_time = default_timer()
+
+            time_elapsed = current_time - self.start_time
+            ping_tuple = (time_elapsed, data)
+            self.ping_data.append(ping_tuple)
 
     # signals for process to stop
     def stop_ping_test(self):

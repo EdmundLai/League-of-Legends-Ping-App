@@ -11,7 +11,7 @@ class PingEngine:
         self.gui = gui_tk.MainGui()
         self.sql_module = mysql_mod.MySQLModule()
         self.engine_running = False
-        self.current_ping = None
+        self.current_ping_tuple = None
 
     def init_engine(self):
         self.init_mysql()
@@ -61,15 +61,18 @@ class PingEngine:
         self.init_mysql()
 
     def update_ping(self):
-        ping_text = "Ping: " + str(int(self.current_ping)) + " ms"
+        current_ping = self.current_ping_tuple[1]
+
+        ping_text = "Ping: " + str(int(current_ping)) + " ms"
 
         self.gui.ping_info["text"] = ping_text
 
     def calc_avg_ping(self):
         total = 0
 
-        for num in self.runner.ping_data:
-            total = total + num
+        for curr_tuple in self.runner.ping_data:
+            ping_value = curr_tuple[1]
+            total = total + ping_value
 
         avg = total / len(self.runner.ping_data)
 
@@ -118,12 +121,12 @@ class PingEngine:
 
                 # updating current ping if there is any data
                 if len(self.runner.ping_data) > 0:
-                    self.current_ping = self.runner.ping_data[-1]
+                    self.current_ping_tuple = self.runner.ping_data[-1]
 
                     self.calc_avg_ping()
                     self.update_ping()
                     self.update_spikes()
-                    self.sql_module.insert_ping_val(self.current_ping)
+                    self.sql_module.insert_ping_val(self.current_ping_tuple)
                     print(self.sql_module.get_ping_values())
 
         self.gui.master.after(update_interval, self.check_update_data)

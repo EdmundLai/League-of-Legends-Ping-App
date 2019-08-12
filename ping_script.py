@@ -92,7 +92,8 @@ class PingRunner:
             else:
                 current_time = default_timer()
 
-            time_elapsed = current_time - self.start_time
+            # rounding time_elapsed to integer
+            time_elapsed = int(round(current_time - self.start_time))
             ping_tuple = (time_elapsed, data)
             self.ping_data.append(ping_tuple)
 
@@ -107,6 +108,9 @@ class PingRunner:
         self.process = None
         self.stop_thread = False
         self.start_time = None
+
+    def show_ping_data(self):
+        print(self.ping_data)
 
 
 # Used for testing

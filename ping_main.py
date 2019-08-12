@@ -1,7 +1,6 @@
 import threading
 import ping_script
 import gui_tk
-import mysql_mod
 
 
 # handles calling ping as well as updating the GUI
@@ -9,16 +8,11 @@ class PingEngine:
     def __init__(self):
         self.runner = ping_script.PingRunner()
         self.gui = gui_tk.MainGui()
-        self.sql_module = mysql_mod.MySQLModule()
         self.engine_running = False
         self.current_ping_tuple = None
 
     def init_engine(self):
-        self.init_mysql()
         self.init_gui()
-
-    def init_mysql(self):
-        self.sql_module.init_database()
 
     def init_gui(self):
         self.gui.master.title("LEAGUE OF LEGENDS PING")
@@ -60,7 +54,7 @@ class PingEngine:
         self.engine_running = False
         self.runner.stop_thread = True
         self.gui.reset_info()
-        self.init_mysql()
+        # self.init_mysql()
 
     def update_ping(self):
         current_ping = self.current_ping_tuple[1]
@@ -128,19 +122,18 @@ class PingEngine:
                     self.calc_avg_ping()
                     self.update_ping()
                     self.update_spikes()
-                    self.sql_module.insert_ping_val(self.current_ping_tuple)
+                    # self.runner.show_ping_data()
+                    time_ping_tup = PingEngine.convert_to_lists(self.runner.ping_data)
 
-                    sql_ping_values = self.sql_module.get_ping_values()
-                    time_ping_tup = PingEngine.convert_to_lists(sql_ping_values)
                     self.gui.update_data(time_ping_tup)
 
         self.gui.master.after(update_interval, self.check_update_data)
 
     @staticmethod
-    def convert_to_lists(sql_tuple):
+    def convert_to_lists(ping_data):
         time_list = []
         ping_list = []
-        for current_tup in sql_tuple:
+        for current_tup in ping_data:
             time_list.append(current_tup[0])
             ping_list.append(current_tup[1])
 

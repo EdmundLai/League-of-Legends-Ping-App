@@ -16,6 +16,9 @@ class PingRunner:
         self.found_index = None
         self.data_changed = False
         self.start_time = None
+        self.ping_diff = None
+        # seconds without lag
+        self.time_no_lag = 0
 
     # used to get the time data from the line created by the terminal
     def parse_line(self, ping_line):
@@ -84,8 +87,18 @@ class PingRunner:
     def handle_data(self, data):
         # occurs if ping request is timed out
         if data is None:
-            self.lag_spikes += 1
+            self.inc_lag_spikes()
         else:
+            # check for lag spike
+            if len(self.ping_data) > 0:
+                last_ping_tup = self.ping_data[-1]
+                self.ping_diff = data - last_ping_tup[1]
+                # ping spike threshold is 30 ms
+                if self.ping_diff > 30:
+                    self.inc_lag_spikes()
+                else:
+                    self.time_no_lag += 1
+
             if self.start_time is None:
                 self.start_time = default_timer()
                 current_time = self.start_time
@@ -97,6 +110,10 @@ class PingRunner:
             ping_tuple = (time_elapsed, data)
             self.ping_data.append(ping_tuple)
 
+    def inc_lag_spikes(self):
+        self.lag_spikes += 1
+        self.time_no_lag = 0
+
     # signals for process to stop
     def stop_ping_test(self):
         self.process.terminate()
@@ -105,6 +122,7 @@ class PingRunner:
     def init_runner(self):
         self.ping_data = []
         self.lag_spikes = 0
+        self.time_no_lag = 0
         self.process = None
         self.stop_thread = False
         self.start_time = None

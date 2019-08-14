@@ -10,6 +10,8 @@ class PingEngine:
         self.gui = gui_tk.MainGui()
         self.engine_running = False
         self.current_ping_tuple = None
+        self.latency_status = None
+        self.stability_status = None
 
     def init_engine(self):
         self.init_gui()
@@ -54,7 +56,6 @@ class PingEngine:
         self.engine_running = False
         self.runner.stop_thread = True
         self.gui.reset_info()
-        # self.init_mysql()
 
     def update_ping(self):
         current_ping = self.current_ping_tuple[1]
@@ -70,11 +71,11 @@ class PingEngine:
             ping_value = curr_tuple[1]
             total = total + ping_value
 
-        avg = total / len(self.runner.ping_data)
+        avg_ping = total / len(self.runner.ping_data)
 
-        avg_string = "%.f" % avg
+        avg_ping_string = "%.f" % avg_ping
 
-        ping_text = "Average Ping: " + avg_string + " ms"
+        ping_text = "Average Ping: " + avg_ping_string + " ms"
 
         self.gui.avg_ping["text"] = ping_text
 
@@ -82,6 +83,69 @@ class PingEngine:
         spikes = str(self.runner.lag_spikes)
 
         self.gui.lag_spikes["text"] = "Number of lag spikes: " + spikes
+
+    def update_ping_diff(self):
+        if self.runner.ping_diff is not None:
+            diff = str(int(round(self.runner.ping_diff)))
+
+            self.gui.ping_diff["text"] = "Difference between last 2 ping values: " + diff + " ms"
+
+    def update_latency(self):
+        status_types = ["LOW", "MEDIUM", "HIGH", "VERY HIGH"]
+
+        current_ping = self.current_ping_tuple[1]
+
+        if current_ping < 60:
+            self.latency_status = status_types[0]
+        elif current_ping < 100:
+            self.latency_status = status_types[1]
+        elif current_ping < 200:
+            self.latency_status = status_types[2]
+        else:
+            self.latency_status = status_types[3]
+
+        latency_text = "Latency: " + self.latency_status
+
+        self.gui.latency["text"] = latency_text
+
+    def update_stability(self):
+        status_types = ["STABLE", "UNSTABLE"]
+
+        # print(self.runner.time_no_lag)
+
+        if self.runner.lag_spikes == 0:
+            self.stability_status = status_types[0]
+        else:
+            # if in the last minute there have been no ping spikes, the connection is stable
+            if self.runner.time_no_lag > 60:
+                self.stability_status = status_types[0]
+            else:
+                self.stability_status = status_types[1]
+
+        stability_text = "Stability: " + self.stability_status
+
+        self.gui.stability["text"] = stability_text
+
+    # makes a recommendation for optimal gaming experience depending on current connection quality
+    def make_recommendation(self):
+        # print(self.stability_status)
+        # print(self.latency_status)
+        # if self.stability_status == "STABLE":
+        #     print("connection is stable!")
+        #
+        # if self.latency_status == "MEDIUM":
+        #     print("latency is okay!")
+        # else:
+        #     print("latency is not okay!")
+
+        if self.stability_status == "STABLE" and (self.latency_status == "LOW" or self.latency_status == "MEDIUM"):
+            recommendation = "YES"
+        else:
+            recommendation = "NO"
+
+        recommendation_text = "Can I play League right now? " + recommendation
+
+        self.gui.recommendation["text"] = recommendation_text
 
     def check_engine_start(self):
         update_interval = 100
@@ -122,6 +186,10 @@ class PingEngine:
                     self.calc_avg_ping()
                     self.update_ping()
                     self.update_spikes()
+                    self.update_ping_diff()
+                    self.update_latency()
+                    self.update_stability()
+                    self.make_recommendation()
                     # self.runner.show_ping_data()
                     time_ping_tup = PingEngine.convert_to_lists(self.runner.ping_data)
 

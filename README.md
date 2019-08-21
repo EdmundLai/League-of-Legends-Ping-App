@@ -1,6 +1,6 @@
 # League-of-Legends-Ping-App
 
-![Screenshot of Ping App](demo_images/ping_app_demo.png?raw=true "App Interface")
+![Screenshot of Ping App](demo_images/ping_app_demo.PNG?raw=true "App Interface")
 
 Allows users to ping League of Legends servers without entering an actual game.
 

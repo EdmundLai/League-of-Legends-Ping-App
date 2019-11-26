@@ -17,7 +17,7 @@ class PingEngine:
         self.init_gui()
 
     def init_gui(self):
-        self.gui.master.title("LEAGUE OF LEGENDS PING")
+        self.gui.master.title("League of Legends Ping Test")
 
         self.gui.master.after(0, self.check_engine_start)
         self.gui.master.after(0, self.check_engine_stop)
